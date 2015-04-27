@@ -25,18 +25,82 @@ Or install it yourself as:
 
 ## Usage
 
-Example:
+A command can be defined with a simple DSL (passing a block that defines
+the command arguments to the SysCmd.command method):
 
     cmd = SysCmd.command 'ffmpeg' do
       option '-i', file: 'input video file.mkv'
       option '-vcodec', 'mjpeg'
       file 'output.mkv'
     end
+
+The block is executed with +instance_eval+ inside the command definition
+(an instance of SysCmd::Definicion), so +self+ and instance variables refer
+to the definition. If this is not desirable an argument can be passed to
+the block with the +Definition+ object:
+
+    cmd = SysCmd.command 'ffmpeg' do |cmd|
+      cmd.option '-i', file: 'input video file.mkv'
+      cmd.option '-vcodec', 'mjpeg'
+      cmd.file 'output.mkv'
+    end
+
+The command can be converted to a String which represents it with
+arguments quoted for the target OS/shell (here we assume a UN*X system)
+
     puts cmd.to_s # ffmpeg -i input\ video\ file.mkv -vcodec mjpeg output.mkv
+
+A command can be generated for a system different from the current host
+by passing the +:os+ option:
+
+    wcmd = SysCmd.command 'ffmpeg', os: :windows do |cmd|
+      cmd.option '-i', file: 'input video file.mkv'
+      cmd.option '-vcodec', 'mjpeg'
+      cmd.file 'output.mkv'
+    end
+    puts cmd.to_s # ffmpeg -i "input video file.mkv" -vcodec mjpeg "output.mkv"
+
+Currently only +:windows+ (for CMD.EXE syntax) and +:unix+ (for bash syntax) are
+accepted for the +:os+ parameter. +:unix+ represent any UN*X-like system
+(including linux, OSX, etc.)
+
+A Command can also be executed:
+
     cmd.run
     if cmd.success?
       puts cmd.output
     end
+
+By default execution is done by launching a shell to interpret the command.
+Unquoted arguments will be interpreted by the shell in that case:
+
+    cmd = SysCmd.command 'echo' do
+      argument '$BASH'
+    end
+    puts cmd.output # /bin/bash
+
+Shell execution can be avoided by passing the +:direct+ option with value
++true+ to the +run+ method. In that case the command is executed directly,
+and no shell interpretation takes place, so:
+
+    cmd = SysCmd.command 'echo' do
+      argument '$BASH'
+    end
+    puts cmd.output # $BASH
+
+If the command options include
+an option with the name of the command being defined it is used to
+replace the command name. This can be handy to pass user configuration
+to define the location/name of commands in a particular system:
+
+    options = {
+      curl: "/usr/local/bin/curl"
+    }
+    cmd = SysCmd.command 'curl', options do
+      file 'http://jsonip.com'
+    end
+    puts cmd.to_s # /usr/local/bin/curl http://jsonip.com
+
 
 ## Development
 
