@@ -71,9 +71,9 @@ module SysCmd
       else
         option = option.dup
       end
-      option << @shell.escape_value(value) if value
+      option << ' ' << @shell.escape_value(value) if value
       option << @shell.escape_value(options[:join_value]) if options[:join_value]
-      option << '=' << @shell.escape_value(options[:equal_value]) if options[:join_value]
+      option << '=' << @shell.escape_value(options[:equal_value]) if options[:equal_value]
       if file = options[:file]
         file_sep = ' '
       elsif file = options[:join_file]

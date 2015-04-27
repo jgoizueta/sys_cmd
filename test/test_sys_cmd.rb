@@ -51,6 +51,17 @@ class TestSysCmd < Minitest::Test
     assert_equal 'gswin32c -q', cmd.to_s
   end
 
+  def test_command_options
+    cmd = SysCmd.command 'command', os: :unix do
+      option 'a', 111
+      option 'b', join_value: 222
+      option 'c', equal_value: 333
+      option 'd', value: 444
+      option 'x', join_value: 555, equal_value: 666
+    end
+    assert_equal 'command -a 111 -b222 -c=333 -d 444 -x555=666', cmd.to_s
+  end
+
   def test_os_arguments
     cmd = SysCmd.command 'test', os: :unix do
       option '-a'
