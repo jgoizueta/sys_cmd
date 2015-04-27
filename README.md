@@ -1,5 +1,8 @@
 # SysCmd
 
+[![Gem Version](https://badge.fury.io/rb/sys_cmd.svg)](http://badge.fury.io/rb/sys_cmd)
+[![Build Status](https://travis-ci.org/jgoizueta/sys_cmd.svg)](https://travis-ci.org/jgoizueta/sys_cmd)
+
 SysCmd is a DSL to define commands to be executed by the system.
 
 The command arguments will we escaped properly for bash or
