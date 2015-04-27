@@ -26,7 +26,7 @@ module SysCmd
       @last_arg = :command
     end
 
-    attr_reader :command
+    attr_reader :command, :shell
 
     def to_s
       command
@@ -124,14 +124,13 @@ module SysCmd
       @last_arg = :file
     end
 
-    # Add the value of an option.
+    # Add the value of an option (or a quoted argument)
     #
     #    option '-x'
     #    join_value 123  # -x 123
     #
     def value(value, options = {})
       return unless @shell.applicable?(options)
-      raise "An option is required for value" unless @last_arg == :option
       @command << ' ' << @shell.escape_filename(value.to_s)
       @last_arg = :value
     end
@@ -162,10 +161,12 @@ module SysCmd
       @last_arg = :value
     end
 
-    # Add a generic argument to the command.
+    # Add an unquoted argument to the command.
+    # This is not useful for commands executed directly, since the arguments
+    # are note interpreted by a shell in that case.
     def argument(value, options = {})
       return unless @shell.applicable?(options)
-      @command << ' ' << @shell.escape_value(value)
+      @command << ' ' << value.to_s
       @last_arg = :argument
     end
 
@@ -173,8 +174,14 @@ module SysCmd
 
   # An executable system command
   class Command
-    def initialize(command)
-      @command = command
+    def initialize(command, options = {})
+      if command.respond_to?(:shell)
+        @command = command.command
+        @shell = command.shell
+      else
+        @command = command
+        @shell = Shell.new(options)
+      end
       @output = nil
       @status = nil
       @error_output = nil
@@ -184,6 +191,17 @@ module SysCmd
     attr_reader :command, :output, :status, :error_output, :error
 
     # Execute the command.
+    #
+    # By default the command is executed by a shell. In this case,
+    # unquoted arguments are interpreted by the shell, e.g.
+    #
+    #   SysCmd.command('echo $BASH').run # /bin/bash
+    #
+    # When the +:direct+ option is set to true, no shell is used and
+    # the command is directly executed; in this case unquoted arguments
+    # are not interpreted:
+    #
+    #   SysCmd.command('echo $BASH').run # $BASH
     #
     # The exit status of the command is retained in the +status+ attribute
     # (and its numeric value in the +status_value+ attribute).
@@ -213,14 +231,19 @@ module SysCmd
     #
     def run(options = {})
       @output = @status = @error_output = @error = nil
+      if options[:direct]
+        command = @shell.split(@command)
+      else
+        command = [@command]
+      end
       begin
         case options[:error_output]
         when :mix # mix stderr with stdout
-          @output, @status = Open3.capture2e(@command)
+          @output, @status = Open3.capture2e(*command)
         when :separate
-          @output, @error_output, @status = Open3.capture3(@command)
+          @output, @error_output, @status = Open3.capture3(*command)
         else # :console (do not capture stderr output)
-          @output, @status = Open3.capture2(@command)
+          @output, @status = Open3.capture2(*command)
         end
       rescue => error
         @error = error.dup
@@ -272,7 +295,7 @@ module SysCmd
         definition.instance_eval &block
       end
     end
-    Command.new definition.command
+    Command.new definition
   end
 
   # Build and run a command
@@ -311,6 +334,26 @@ module SysCmd
     end
   end
 
+  def self.split(text, options = {})
+    case os_type(options)
+    when :windows
+      words = []
+      field = ''
+      line.scan(/\G\s*(?>([^\s\^\'\"]+)|'([^\']*)'|"((?:[^\"\^]|\\.)*)"|(\^.?)|(\S))(\s|\z)?/m) do
+        |word, sq, dq, esc, garbage, sep|
+        raise ArgumentError, "Unmatched double quote: #{line.inspect}" if garbage
+        field << (word || sq || (dq || esc).gsub(/\^(.)/, '\\1'))
+        if sep
+          words << field
+          field = ''
+        end
+      end
+      words
+    else
+      Shellwords.shellsplit(text)
+    end
+  end
+
   def self.line_separator(options = {})
     case os_type(options)
     when :windows
@@ -339,6 +382,10 @@ module SysCmd
 
     def escape(text)
       SysCmd.escape(text, os: @type)
+    end
+
+    def split(text)
+      SysCmd.split(text, os: @type)
     end
 
     def escape_filename(name)

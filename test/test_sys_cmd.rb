@@ -174,6 +174,28 @@ class TestSysCmd < Minitest::Test
     end
   end
 
+  def test_commmand_execution
+    path_value = ENV['PATH']
+    if OS.windows?
+      path_name = '%PATH%'
+    else
+      path_name = '$PATH'
+    end
 
-  # TODO: test_command_execution
+    cmd = SysCmd.command 'echo' do
+      argument path_name
+    end
+    cmd.run
+    assert_equal path_value, cmd.output.strip
+    cmd.run direct: true
+    assert_equal path_name, cmd.output.strip
+
+    cmd = SysCmd.command 'echo' do
+      value path_name
+    end
+    cmd.run
+    assert_equal path_name, cmd.output.strip
+    cmd.run direct: true
+    assert_equal path_name, cmd.output.strip
+  end
 end
