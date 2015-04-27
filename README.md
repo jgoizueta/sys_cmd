@@ -80,15 +80,14 @@ Unquoted arguments will be interpreted by the shell in that case:
     cmd = SysCmd.command 'echo' do
       argument '$BASH'
     end
+    cmd.run
     puts cmd.output # /bin/bash
 
 Shell execution can be avoided by passing the +:direct+ option with value
 +true+ to the +run+ method. In that case the command is executed directly,
 and no shell interpretation takes place, so:
 
-    cmd = SysCmd.command 'echo' do
-      argument '$BASH'
-    end
+    cmd.run direct: true
     puts cmd.output # $BASH
 
 If the command options include
