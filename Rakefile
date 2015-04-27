@@ -16,7 +16,7 @@ Rake::RDocTask.new do |rdoc|
   rdoc.main = "README.md"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
-  rdoc.markup = 'markdown'
+  rdoc.markup = 'markdown' if rdoc.respond_to?(:markup)
 end
 
 task :default => :test
