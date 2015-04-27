@@ -265,7 +265,13 @@ module SysCmd
   #
   def self.command(command, options = {}, &block)
     definition = Definition.new(command, options)
-    definition.instance_eval &block if block
+    if block
+      if block.arity == 1
+        block.call definition
+      else
+        definition.instance_eval &block
+      end
+    end
     Command.new definition.command
   end
 

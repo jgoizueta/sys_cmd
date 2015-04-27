@@ -20,6 +20,18 @@ class TestSysCmd < Minitest::Test
 
   end
 
+  def test_block_with_argument
+    outer_self = self.object_id
+    inner_self = nil
+    cmd = SysCmd.command 'ps2pdf', os: :unix do |cmd|
+      inner_self = self.object_id
+      cmd.file 'input_file'
+      cmd.file 'output file'
+    end
+    assert_equal 'ps2pdf input_file output\\ file', cmd.to_s
+    assert_equal outer_self, inner_self
+  end
+
   def test_command_replacement
     cmd = SysCmd.command 'gs', os: :unix, 'gs' => '/usr/local/bin/gs' do
       option '-q'
