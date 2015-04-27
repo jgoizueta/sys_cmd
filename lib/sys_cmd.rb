@@ -389,6 +389,9 @@ module SysCmd
     end
 
     def escape_filename(name)
+      if @type == :windows
+        name = name.gsub('/', '\\')
+      end
       escape name
     end
 

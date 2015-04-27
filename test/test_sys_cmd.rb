@@ -185,6 +185,14 @@ class TestSysCmd < Minitest::Test
     end
   end
 
+  def test_windows_files
+    cmd = SysCmd.command 'wincmd', os: :windows do
+      file "/abc/def.x"
+      file "C:\\xyz\\uv.w"
+    end
+    assert_equal %{wincmd "\\abc\\def.x" "C:\\xyz\\uv.w"}, cmd.to_s
+  end
+
   def test_commmand_execution
     path_value = ENV['PATH']
     if OS.windows?
