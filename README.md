@@ -119,6 +119,20 @@ end
 puts cmd.to_s # /usr/local/bin/curl http://jsonip.com
 ```
 
+A string can be provided as the standard input for a command
+by passing the :stdin_data option to the `run`  method:
+
+```ruby
+cmd = SysCmd.command 'curl' do
+  option '--config -'
+  file 'http://jsonip.com'
+end
+cmd.run stdin_data: %{
+  --head
+}
+puts cmd.output # "HTTP/1.1 200 OK ...
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/console` for an interactive prompt that will allow you to experiment.
