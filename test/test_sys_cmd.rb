@@ -17,7 +17,6 @@ class TestSysCmd < Minitest::Test
       file 'output file'
     end
     assert_equal 'ps2pdf "input_file" "output file"', cmd.to_s
-
   end
 
   def test_block_with_argument
@@ -216,5 +215,20 @@ class TestSysCmd < Minitest::Test
     assert_equal path_name, cmd.output.strip
     cmd.run direct: true
     assert_equal path_name, cmd.output.strip
+  end
+
+  def test_stdin_data
+    if OS.windows?
+      skip
+      return
+    end
+    [nil, :mix, :separate].each do |error_output|
+      [true, false].each do |direct|
+        cmd = SysCmd.command('cat')
+        cmd.run direct: direct, error_output: error_output,  stdin_data: 'xyz'
+        assert_equal 'xyz', cmd.output.strip,
+                     "Stdin for direct: #{direct}; output: #{error_output}"
+      end
+    end
   end
 end

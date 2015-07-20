@@ -229,12 +229,18 @@ module SysCmd
     # The +:return+ option can be used to make this method return other
     # attribute of the executed command.
     #
+    # The +:stdin_data+ option can be used to pass a String as the
+    # command's standar input.
+    #
     def run(options = {})
       @output = @status = @error_output = @error = nil
       if options[:direct]
         command = @shell.split(@command)
       else
         command = [@command]
+      end
+      if options[:stdin_data]
+        command << { stdin_data: options[:stdin_data] }
       end
       begin
         case options[:error_output]
