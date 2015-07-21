@@ -50,7 +50,45 @@ class TestSysCmd < Minitest::Test
     assert_equal 'gswin32c -q', cmd.to_s
   end
 
-  def test_command_options
+  def test_command_os_prefixed_options_unix
+    cmd = SysCmd.command 'command', os: :unix do
+      option 'a', 111, os_prefix: true
+      option 'b', join_value: 222, os_prefix: true
+      option 'c', equal_value: 333, os_prefix: true
+      option 'd', value: 444, os_prefix: true
+      option 'x', join_value: 555, equal_value: 666, os_prefix: true
+    end
+    assert_equal 'command -a 111 -b222 -c=333 -d 444 -x555=666', cmd.to_s
+    cmd = SysCmd.command 'command', os: :unix do
+      os_option 'a', 111
+      os_option 'b', join_value: 222
+      os_option 'c', equal_value: 333
+      os_option 'd', value: 444
+      os_option 'x', join_value: 555, equal_value: 666
+    end
+    assert_equal 'command -a 111 -b222 -c=333 -d 444 -x555=666', cmd.to_s
+  end
+
+  def test_command_os_prefixed_options_windows
+    cmd = SysCmd.command 'command', os: :windows do
+      option 'a', 111, os_prefix: true
+      option 'b', join_value: 222, os_prefix: true
+      option 'c', equal_value: 333, os_prefix: true
+      option 'd', value: 444, os_prefix: true
+      option 'x', join_value: 555, equal_value: 666, os_prefix: true
+    end
+    assert_equal 'command /a "111" /b"222" /c="333" /d "444" /x"555"="666"', cmd.to_s
+    cmd = SysCmd.command 'command', os: :windows do
+      os_option 'a', 111
+      os_option 'b', join_value: 222
+      os_option 'c', equal_value: 333
+      os_option 'd', value: 444
+      os_option 'x', join_value: 555, equal_value: 666
+    end
+    assert_equal 'command /a "111" /b"222" /c="333" /d "444" /x"555"="666"', cmd.to_s
+  end
+
+  def test_command_unprefixed_options
     cmd = SysCmd.command 'command', os: :unix do
       option 'a', 111
       option 'b', join_value: 222
@@ -58,8 +96,9 @@ class TestSysCmd < Minitest::Test
       option 'd', value: 444
       option 'x', join_value: 555, equal_value: 666
     end
-    assert_equal 'command -a 111 -b222 -c=333 -d 444 -x555=666', cmd.to_s
+    assert_equal 'command a 111 b222 c=333 d 444 x555=666', cmd.to_s
   end
+
 
   def test_os_arguments
     cmd = SysCmd.command 'test', os: :unix do

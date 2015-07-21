@@ -32,11 +32,17 @@ module SysCmd
       command
     end
 
-    # Add an option. If the option is nor prefixed by - or /
+    # Add an option to the command.
+    #
+    #     option '-x'    # flag-style option
+    #     option '--y'   # long option
+    #     option '/z'    # Windows-style option
+    #     options 'abc'  # unprefixed option
+    #
+    # If the option +:os_prefix+ is true
     # then the default system option switch will be used.
     #
-    #     option 'x' # will produce -x or /x
-    #     option '-x' # will always produce -x
+    #     option 'x', os_prefix: true # will produce -x or /x
     #
     # A value can be given as an option and will be space-separated from
     # the option name:
@@ -66,7 +72,7 @@ module SysCmd
       raise "Invalid number of arguments (0 or 1 expected)" if args.size > 1
       return unless @shell.applicable?(options)
       value = args.shift || options[:value]
-      if /\A[a-z]/i =~ option
+      if options[:os_prefix]
         option = @shell.option_switch + option
       else
         option = option.dup
@@ -86,6 +92,14 @@ module SysCmd
       end
       @command << ' ' << option
       @last_arg = :option
+    end
+
+    # An +os_option+ has automatically a OS-dependent prefix
+    def os_option(option, *args)
+      options = args.pop if args.last.is_a?(Hash)
+      options ||= {}
+      args.push options.merge(os_prefix: true)
+      option option, *args
     end
 
     # Add a filename to the command.
