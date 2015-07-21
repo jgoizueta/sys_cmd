@@ -311,7 +311,11 @@ module SysCmd
     end
 
     def to_s
-      command
+      if @stdin_data
+        "#{command}#{@shell.here_doc(@stdin_data)}"
+      else
+        command
+      end
     end
 
   end
@@ -406,6 +410,17 @@ module SysCmd
     end
   end
 
+  def self.here_doc(text, options = {})
+    case os_type(options)
+    when :windows
+      # only valid for PowerShell
+      " @'\n#{text}\n'@\n"
+    else
+      delimiter = options[:delimiter] || 'EOF'
+      " << #{delimiter}\n#{text}\n#{delimiter}\n"
+    end
+  end
+
   class Shell
 
     def initialize(options = {})
@@ -454,6 +469,9 @@ module SysCmd
       applicable
     end
 
+    def here_doc(data, options = {})
+      SysCmd.here_doc(data, options.merge(os: @type))
+    end
   end
 
   # Execute a block of code only on some systems

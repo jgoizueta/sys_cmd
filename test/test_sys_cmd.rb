@@ -305,4 +305,18 @@ class TestSysCmd < Minitest::Test
       end
     end
   end
+
+  def test_stdin_data_to_s
+    if OS.windows?
+      skip
+      return
+    end
+    cmd = SysCmd.command 'cat' do
+    end
+    assert_equal 'cat', cmd.to_s
+    cmd = SysCmd.command 'cat' do
+      input 'xyz'
+    end
+    assert_equal "cat << EOF\nxyz\nEOF\n", cmd.to_s
+  end
 end
