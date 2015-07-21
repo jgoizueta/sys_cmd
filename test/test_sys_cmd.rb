@@ -256,6 +256,24 @@ class TestSysCmd < Minitest::Test
     assert_equal path_name, cmd.output.strip
   end
 
+  def test_commmand_run_return_value
+    path_value = ENV['PATH']
+    if OS.windows?
+      path_name = '%PATH%'
+    else
+      path_name = '$PATH'
+    end
+
+    cmd = SysCmd.command 'echo' do
+      argument path_name
+    end
+    assert_equal true, cmd.run
+    assert_equal Process::Status, cmd.run(return: :status).class
+    assert_equal 0, cmd.run(return: :status_value)
+    assert_equal path_value.strip, cmd.run(return: :output).strip
+    assert_equal cmd, cmd.run(return: :command)
+  end
+
   def test_stdin_data_defined
     if OS.windows?
       skip

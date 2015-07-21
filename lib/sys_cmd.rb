@@ -289,6 +289,8 @@ module SysCmd
         @output
       when :error_output
         @error_output
+      when :command
+        self
       else
         @error ? nil : @status.success? ? true : false
       end
