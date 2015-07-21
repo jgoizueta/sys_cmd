@@ -78,6 +78,9 @@ module SysCmd
       else
         option = option.dup
       end
+      if @shell.requires_escaping?(option)
+        option = @shell.escape_value(option)
+      end
       option << ' ' << @shell.escape_value(value) if value
       option << @shell.escape_value(options[:join_value]) if options[:join_value]
       option << '=' << @shell.escape_value(options[:equal_value]) if options[:equal_value]
@@ -181,7 +184,11 @@ module SysCmd
     # are note interpreted by a shell in that case.
     def argument(value, options = {})
       return unless @shell.applicable?(options)
-      @command << ' ' << value.to_s
+      value = value.to_s
+      if @shell.requires_escaping?(value)
+        value = @shell.escape_value(value)
+      end
+      @command << ' ' << value
       @last_arg = :argument
     end
 
@@ -372,6 +379,10 @@ module SysCmd
     end
   end
 
+  def self.requires_escaping?(text, options = {})
+    /[\s\"\']/ =~ text
+  end
+
   def self.split(text, options = {})
     case os_type(options)
     when :windows
@@ -431,6 +442,10 @@ module SysCmd
 
     def escape(text)
       SysCmd.escape(text, os: @type)
+    end
+
+    def requires_escaping?(text)
+      SysCmd.requires_escaping?(text, os: @type)
     end
 
     def split(text)

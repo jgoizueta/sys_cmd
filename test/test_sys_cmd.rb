@@ -321,4 +321,24 @@ class TestSysCmd < Minitest::Test
     assert_equal 'cat', cmd.to_s
     assert_equal "cat << EOF\nxyz\nEOF\n", cmd.to_s(with_input: true)
   end
+
+  def test_option_escaping
+    cmd = SysCmd.command 'test', os: :unix do
+      option '-xyz'
+    end
+    assert_equal 'test -xyz', cmd.to_s
+    cmd = SysCmd.command 'test', os: :windows do
+      option '-xyz'
+    end
+    assert_equal 'test -xyz', cmd.to_s
+    cmd = SysCmd.command 'test', os: :unix do
+      option '-x y z'
+    end
+    assert_equal 'test -x\ y\ z', cmd.to_s
+    cmd = SysCmd.command 'test', os: :windows do
+      option '-x y z'
+    end
+    assert_equal 'test "-x y z"', cmd.to_s
+  end
+
 end
