@@ -24,9 +24,10 @@ module SysCmd
       @command = ''
       @command << (@options[command] || command)
       @last_arg = :command
+      @stdin_data = nil
     end
 
-    attr_reader :command, :shell
+    attr_reader :command, :shell, :stdin_data
 
     def to_s
       command
@@ -184,6 +185,14 @@ module SysCmd
       @last_arg = :argument
     end
 
+    # Define data to be passed as standard input to the command
+    def input(data)
+      if @stdin_data
+        @stdin_data += data.to_s
+      else
+        @stdin_data = data.to_s
+      end
+    end
   end
 
   # An executable system command
@@ -192,9 +201,11 @@ module SysCmd
       if command.respond_to?(:shell)
         @command = command.command
         @shell = command.shell
+        @stdin_data = command.stdin_data
       else
         @command = command
         @shell = Shell.new(options)
+        @stdin_data = options[:stdin_data]
       end
       @output = nil
       @status = nil
@@ -253,8 +264,9 @@ module SysCmd
       else
         command = [@command]
       end
-      if options[:stdin_data]
-        command << { stdin_data: options[:stdin_data] }
+      stdin_data = options[:stdin_data] || @stdin_data
+      if stdin_data
+        command << { stdin_data: stdin_data }
       end
       begin
         case options[:error_output]

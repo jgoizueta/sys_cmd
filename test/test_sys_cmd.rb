@@ -256,6 +256,23 @@ class TestSysCmd < Minitest::Test
     assert_equal path_name, cmd.output.strip
   end
 
+  def test_stdin_data_defined
+    if OS.windows?
+      skip
+      return
+    end
+    [nil, :mix, :separate].each do |error_output|
+      [true, false].each do |direct|
+        cmd = SysCmd.command 'cat' do
+          input 'xyz'
+        end
+        cmd.run direct: direct, error_output: error_output
+        assert_equal 'xyz', cmd.output.strip,
+                     "Stdin defined for direct: #{direct}; output: #{error_output}"
+      end
+    end
+  end
+
   def test_stdin_data
     if OS.windows?
       skip
