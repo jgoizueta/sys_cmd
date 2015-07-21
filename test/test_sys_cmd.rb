@@ -314,9 +314,11 @@ class TestSysCmd < Minitest::Test
     cmd = SysCmd.command 'cat' do
     end
     assert_equal 'cat', cmd.to_s
+    assert_equal 'cat', cmd.to_s(with_input: true)
     cmd = SysCmd.command 'cat' do
       input 'xyz'
     end
-    assert_equal "cat << EOF\nxyz\nEOF\n", cmd.to_s
+    assert_equal 'cat', cmd.to_s
+    assert_equal "cat << EOF\nxyz\nEOF\n", cmd.to_s(with_input: true)
   end
 end

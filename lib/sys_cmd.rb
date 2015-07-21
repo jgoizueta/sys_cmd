@@ -201,11 +201,11 @@ module SysCmd
       if command.respond_to?(:shell)
         @command = command.command
         @shell = command.shell
-        @stdin_data = command.stdin_data
+        @input = command.stdin_data
       else
         @command = command
         @shell = Shell.new(options)
-        @stdin_data = options[:stdin_data]
+        @input = options[:stdin_data]
       end
       @output = nil
       @status = nil
@@ -213,7 +213,7 @@ module SysCmd
       @error = nil
     end
 
-    attr_reader :command, :output, :status, :error_output, :error
+    attr_reader :command, :output, :status, :error_output, :error, :input
 
     # Execute the command.
     #
@@ -264,7 +264,7 @@ module SysCmd
       else
         command = [@command]
       end
-      stdin_data = options[:stdin_data] || @stdin_data
+      stdin_data = options[:stdin_data] || @input
       if stdin_data
         command << { stdin_data: stdin_data }
       end
@@ -310,9 +310,9 @@ module SysCmd
       !error? && @status.success?
     end
 
-    def to_s
-      if @stdin_data
-        "#{command}#{@shell.here_doc(@stdin_data)}"
+    def to_s(options = {})
+      if @input && options[:with_input]
+        "#{command}#{@shell.here_doc(@input)}"
       else
         command
       end
